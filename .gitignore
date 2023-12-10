@@ -6,6 +6,7 @@
 .pub-cache/
 .pub/
 pubspec.lock
+*.mocks.dart
 .idea/
 build/
 coverage/
