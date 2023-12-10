@@ -7,6 +7,24 @@ on:
     branches:
       - master
 jobs:
+  update_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update version
+        run: |
+          # Get the current version from pubspec.yaml
+          current_version=$(grep -E 'version: ' pubspec.yaml | cut -d' ' -f2)
+          # Increment the patch version
+          new_version="${current_version%.*}"."$(( ${current_version##*.} + 1 ))"
+          echo "Updating version to $new_version..."
+          # Update the version in pubspec.yaml
+          sed -i "s/$current_version/$new_version/g" pubspec.yaml
+          # Commit and push the changes
+          git config user.name "GitHub Actions"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update version to $new_version"
+          git push
   lint:
     runs-on: ubuntu-latest
     steps:
