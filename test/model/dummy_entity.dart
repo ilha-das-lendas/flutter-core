@@ -1,5 +1,7 @@
 import 'package:flutter_core/datasources/local/entity.dart';
 
+import 'dummy_model.dart';
+
 class DummyEntity extends Entity {
   @override
   get table => DummyTable.tableName;
@@ -31,6 +33,17 @@ class DummyEntity extends Entity {
     };
     return map;
   }
+
+  factory DummyEntity.fromMap(Map<String, Object?> map) {
+    return DummyEntity(
+      map[DummyTable.columnId] as int?,
+      map[DummyTable.columnSelf] as String,
+    );
+  }
+}
+
+extension DummyEntityExtension on DummyEntity {
+  DummyModel toModel() => DummyModel(id, self);
 }
 
 class DummyTable {

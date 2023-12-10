@@ -1,4 +1,4 @@
-import 'package:flutter_core/datasources/local/database/database.dart';
+import 'package:flutter_core/datasources/local/database/database_provider.dart';
 import 'package:flutter_core/datasources/local/entity.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
