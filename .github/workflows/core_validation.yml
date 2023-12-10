@@ -6,11 +6,16 @@ on:
   pull_request:
     branches:
       - master
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
 jobs:
   update_version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set GitHub token
+        run: echo "GITHUB_TOKEN=${{ secrets.TOKEN }}" >> $GITHUB_ENV
       - name: Update version
         run: |
           # Get the current version from pubspec.yaml
@@ -24,7 +29,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am "Update version to $new_version"
-          git push
+          git push https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/MarceloEsser/flutter-core/
   lint:
     runs-on: ubuntu-latest
     steps:
