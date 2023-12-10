@@ -86,11 +86,4 @@ void main() {
       assert(resource.data is List<DummyEntity>);
     },
   );
-
-  test(
-    'Should save the network call result when `saveCallResult` DataBoundResource method is implemented',
-    () async {
-      var database = MockDatabaseProviderImpl();
-    },
-  );
 }
