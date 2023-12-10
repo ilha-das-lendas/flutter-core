@@ -42,9 +42,12 @@ class Result<T> {
     try {
       return _receivePort.listen(
         (message) {
-          onData.call(message);
+          onData.call(message as Resource<T>);
         },
-        onError: onError,
+        onError: (e) {
+          onError?.call(e);
+          debug(e.toString(), error: e);
+        },
         onDone: onDone,
         cancelOnError: cancelOnError,
       );

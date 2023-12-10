@@ -1,3 +1,4 @@
+import 'package:flutter_core/datasources/remote/client/http_client.dart';
 import 'package:flutter_core/datasources/resource_strategy.dart';
 import 'package:flutter_core/datasources/remote/remote_resource_trategy.dart';
 import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
@@ -58,7 +59,9 @@ class DataBoundResource<T> {
       } catch (e) {
         if (wrapper.message != null) {
           _sendError(
-              "remote fetch exception: ${wrapper.message}", DataSource.network);
+            "remote fetch exception: ${wrapper.message}",
+            DataSource.network,
+          );
           return;
         }
         _sendError("remote fetch exception: $e", DataSource.network);
@@ -71,10 +74,6 @@ class DataBoundResource<T> {
       wrapper.message ?? "remote fetch exception: $response",
       DataSource.network,
     );
-  }
-
-  void _sendError(String message, DataSource dataSource) {
-    _result.send(resource: Resource.error(message), dataSource: dataSource);
   }
 
   Future _localFetch() async {
@@ -96,5 +95,9 @@ class DataBoundResource<T> {
     } catch (e) {
       _sendError(e.toString(), DataSource.database);
     }
+  }
+
+  void _sendError(String message, DataSource dataSource) {
+    _result.send(resource: Resource.error(message), dataSource: dataSource);
   }
 }
