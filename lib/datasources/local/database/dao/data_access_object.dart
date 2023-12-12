@@ -1,9 +1,7 @@
 import 'package:flutter_core/datasources/local/entity.dart';
 import 'package:sqflite/sqflite.dart';
 
-abstract class DatabaseProvider {
-  Future<Database?> get database;
-
+abstract class DataAccessObject {
   Future insert({required Entity entity});
 
   Future<Entity?> get<Entity>(int id);

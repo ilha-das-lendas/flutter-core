@@ -1,22 +1,18 @@
-import 'package:flutter_core/datasources/local/database/database_provider.dart';
+import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/entity.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DatabaseProviderImpl implements DatabaseProvider {
-  final String _dbName = '';
+import '../provider/database_provider.dart';
 
-  @override
-  Future<Database?> get database async {
-    return await openDatabase(
-      join(await getDatabasesPath(), _dbName),
-      version: 1,
-    );
-  }
+class DataAccessObjectImpl implements DataAccessObject {
+  final DatabaseProvider _provider;
 
-  Future<bool> _tableExists(String tableName) async {
+  //https://pub.dev/packages/sqflite_common_ffi
+  DataAccessObjectImpl(this._provider);
+  
+  Future<bool> tableExists(String tableName) async {
     bool tableExists = false;
-    final db = await database;
+    final db = await _provider.database;
     if (db == null) {
       return tableExists;
     }
@@ -31,7 +27,7 @@ class DatabaseProviderImpl implements DatabaseProvider {
 
   @override
   Future insert({required Entity entity}) async {
-    final db = await database;
+    final db = await _provider.database;
     if (db == null || entity.table == null) {
       return;
     }
@@ -42,7 +38,7 @@ class DatabaseProviderImpl implements DatabaseProvider {
 
   @override
   Future insertAll({required List<Entity> entities}) async {
-    final db = await database;
+    final db = await _provider.database;
     if (db == null) {
       return;
     }
@@ -57,8 +53,8 @@ class DatabaseProviderImpl implements DatabaseProvider {
   Future _insert(Entity entity, Database db) async {
     final String table = entity.table!;
 
-    bool tableExists = await _tableExists(table);
-    if (!tableExists) {
+    bool mTableExists = await tableExists(table);
+    if (!mTableExists) {
       await db.execute(entity.createTable());
     }
 
@@ -83,13 +79,13 @@ class DatabaseProviderImpl implements DatabaseProvider {
     required Entity Function(Map<String, Object?>) fromMap,
   }) async {
     List<Entity>? entities;
-    final db = await database;
+    final db = await _provider.database;
     if (db == null) {
       return null;
     }
 
-    bool tableExists = await _tableExists(table);
-    if (!tableExists) {
+    bool mTableExists = await tableExists(table);
+    if (!mTableExists) {
       return null;
     }
 
@@ -105,21 +101,24 @@ class DatabaseProviderImpl implements DatabaseProvider {
   Future<bool> containsEntity({
     required Entity entity,
   }) async {
+    final db = await _provider.database;
 
-    final db = await database;
+    if (entity.table == null) {
+      throw ArgumentError("Entity table must not be null", "$entity");
+    }
 
-    if(entity.table == null) throw ArgumentError("Entity table must not be null", "$entity");
     final String table = entity.table!;
 
     if (db == null) return false;
 
-    bool tableExists = await _tableExists(table);
-    if(!tableExists) return false;
+    bool mTableExists = await tableExists(table);
+    if (!mTableExists) return false;
 
     final entityMap = entity.toMap();
     String where = entityMap.keys.map((e) => "$e = ?").join(' AND ');
 
-    final result = await db.query(table, where: where, whereArgs: entityMap.values.toList());
+    final result = await db.query(table,
+        where: where, whereArgs: entityMap.values.toList());
 
     await db.close();
 

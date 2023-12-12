@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_core/data_bound_resource.dart';
+import 'package:flutter_core/datasources/local/database/dao/data_access_object_impl.dart';
 import 'package:flutter_core/datasources/local/local_resource_strategy.dart';
 import 'package:flutter_core/datasources/remote/remote_resource_trategy.dart';
 import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
@@ -8,12 +9,11 @@ import 'package:flutter_core/resource.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+
 import 'data_bound_resource_test.mocks.dart';
 import 'model/dummy_entity.dart';
 
-@GenerateNiceMocks([MockSpec<DatabaseProviderImpl>()])
-import 'package:flutter_core/datasources/local/database/database_provider_impl.dart';
-
+@GenerateNiceMocks([MockSpec<DataAccessObjectImpl>()])
 final List<DummyEntity> dummyEntityList = [
   DummyEntity(1, "dummy1"),
   DummyEntity(2, "dummy2"),
