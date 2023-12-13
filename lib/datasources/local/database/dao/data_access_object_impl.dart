@@ -1,28 +1,23 @@
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/entity.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../provider/database_provider.dart';
 
 class DataAccessObjectImpl implements DataAccessObject {
-  final DatabaseProvider _provider;
+  DatabaseProvider get _provider => GetIt.instance.get();
 
-  //https://pub.dev/packages/sqflite_common_ffi
-  DataAccessObjectImpl(this._provider);
-  
+  @override
   Future<bool> tableExists(String tableName) async {
-    bool tableExists = false;
     final db = await _provider.database;
     if (db == null) {
-      return tableExists;
+      return false;
     }
 
-    final result = await db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'",
-    );
-    tableExists = result.isNotEmpty;
+    List<Map<String, dynamic>> tables = await db.query('sqlite_master');
 
-    return tableExists;
+    return tables.any((table) => table['name'] == tableName);
   }
 
   @override
@@ -33,7 +28,7 @@ class DataAccessObjectImpl implements DataAccessObject {
     }
     await _insert(entity, db);
 
-    await db.close();
+    await _close();
   }
 
   @override
@@ -47,7 +42,7 @@ class DataAccessObjectImpl implements DataAccessObject {
       await _insert(entity, db);
     }
 
-    await db.close();
+    await _close();
   }
 
   Future _insert(Entity entity, Database db) async {
@@ -92,7 +87,7 @@ class DataAccessObjectImpl implements DataAccessObject {
     final result = await db.query(table);
     entities = result.map(fromMap).toList();
 
-    await db.close();
+    await _close();
 
     return entities;
   }
@@ -117,11 +112,21 @@ class DataAccessObjectImpl implements DataAccessObject {
     final entityMap = entity.toMap();
     String where = entityMap.keys.map((e) => "$e = ?").join(' AND ');
 
-    final result = await db.query(table,
-        where: where, whereArgs: entityMap.values.toList());
+    final result = await db.query(
+      table,
+      where: where,
+      whereArgs: entityMap.values.toList(),
+    );
 
-    await db.close();
+    await _close();
 
     return result.isNotEmpty;
+  }
+
+  Future<void> _close() async {
+    final bool isTesting = (await _provider.path) == inMemoryDatabasePath;
+    if (isTesting) return;
+
+    await _provider.close();
   }
 }

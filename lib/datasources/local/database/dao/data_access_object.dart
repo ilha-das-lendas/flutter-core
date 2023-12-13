@@ -1,5 +1,4 @@
 import 'package:flutter_core/datasources/local/entity.dart';
-import 'package:sqflite/sqflite.dart';
 
 abstract class DataAccessObject {
   Future insert({required Entity entity});
@@ -14,4 +13,6 @@ abstract class DataAccessObject {
   Future insertAll({required List<Entity> entities});
 
   Future<bool> containsEntity({required Entity entity});
+
+  Future<bool> tableExists(String tableName);
 }

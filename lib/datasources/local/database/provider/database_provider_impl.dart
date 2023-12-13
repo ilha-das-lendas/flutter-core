@@ -7,11 +7,19 @@ class DatabaseProviderImpl extends DatabaseProvider {
 
   DatabaseProviderImpl(this._dbName);
 
+  Future<String> get _path async => await getDatabasesPath();
+
+  @override
+  Future<String> get path => _path;
+
   @override
   Future<Database?> get database async {
     return await openDatabase(
-      join(await getDatabasesPath(), _dbName),
+      join(await _path, _dbName),
       version: 1,
     );
   }
+
+  @override
+  Future<void> close() async => (await database)?.close();
 }

@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter_core/data_bound_resource.dart';
+
+@GenerateNiceMocks([MockSpec<DataAccessObjectImpl>()])
 import 'package:flutter_core/datasources/local/database/dao/data_access_object_impl.dart';
+
 import 'package:flutter_core/datasources/local/local_resource_strategy.dart';
 import 'package:flutter_core/datasources/remote/remote_resource_trategy.dart';
 import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
@@ -11,9 +14,9 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'data_bound_resource_test.mocks.dart';
-import 'model/dummy_entity.dart';
+import 'database/di/di.dart';
+import 'database/model/dummy_entity.dart';
 
-@GenerateNiceMocks([MockSpec<DataAccessObjectImpl>()])
 final List<DummyEntity> dummyEntityList = [
   DummyEntity(1, "dummy1"),
   DummyEntity(2, "dummy2"),
@@ -22,10 +25,14 @@ final List<DummyEntity> dummyEntityList = [
 ];
 
 void main() {
+  setUpAll(() {
+    setupDatabaseDi();
+  });
+
   test(
     'DataBoundResource should send the database result when the query finish',
     () async {
-      var database = MockDatabaseProviderImpl();
+      var database = MockDataAccessObjectImpl();
       when(
         database.getAll(
           table: DummyTable.tableName,
@@ -50,7 +57,7 @@ void main() {
   );
 
   test(
-    'should not be possible to return the network result without mapping',
+    'Should not be possible to return the network result without mapping',
     () async {
       final dataBoundResource = DataBoundResource<List<DummyEntity>>(
         remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(

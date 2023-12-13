@@ -1,6 +1,6 @@
 import 'package:flutter_core/datasources/local/entity.dart';
 
-import 'dummy_model.dart';
+import '../../model/dummy_model.dart';
 
 class DummyEntity extends Entity {
   @override
@@ -18,11 +18,12 @@ class DummyEntity extends Entity {
   @override
   String createTable() {
     return '''
-      CREATE TABLE ${DummyTable.tableName} (
+      CREATE TABLE $table (
         ${DummyTable.columnId} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${DummyTable.columnSelf} TEXT
       )
     ''';
+
   }
 
   @override
@@ -47,7 +48,7 @@ extension DummyEntityExtension on DummyEntity {
 }
 
 class DummyTable {
-  static const tableName = "dummy_entity";
+  static const tableName = "Dummy";
   static const columnId = "id";
   static const columnSelf = "self";
 }
