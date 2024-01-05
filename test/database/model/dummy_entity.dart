@@ -16,15 +16,7 @@ class DummyEntity extends Entity {
   DummyEntity(this._id, this.self);
 
   @override
-  String createTable() {
-    return '''
-      CREATE TABLE $table (
-        ${DummyTable.columnId} INTEGER PRIMARY KEY AUTOINCREMENT,
-        ${DummyTable.columnSelf} TEXT
-      )
-    ''';
-
-  }
+  String createTable() => DummyTable.createTable;
 
   @override
   Map<String, dynamic> toMap() {
@@ -35,7 +27,7 @@ class DummyEntity extends Entity {
     return map;
   }
 
-  factory DummyEntity.fromMap(Map<String, Object?> map) {
+  factory DummyEntity.fromMap(Map<String, dynamic> map) {
     return DummyEntity(
       map[DummyTable.columnId] as int?,
       map[DummyTable.columnSelf] as String,
@@ -51,4 +43,10 @@ class DummyTable {
   static const tableName = "Dummy";
   static const columnId = "id";
   static const columnSelf = "self";
+  static const createTable = '''
+      CREATE TABLE $tableName (
+        $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $columnSelf TEXT
+      )
+    ''';
 }

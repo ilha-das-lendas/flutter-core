@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/entity.dart';
 import 'package:get_it/get_it.dart';
@@ -6,127 +7,151 @@ import 'package:sqflite/sqflite.dart';
 import '../provider/database_provider.dart';
 
 class DataAccessObjectImpl implements DataAccessObject {
-  DatabaseProvider get _provider => GetIt.instance.get();
+  final DatabaseProvider _provider;
 
+  Future<Database> get _database async => await _provider.database;
+
+  DataAccessObjectImpl(this._provider);
+
+  @visibleForTesting
   @override
-  Future<bool> tableExists(String tableName) async {
-    final db = await _provider.database;
-    if (db == null) {
-      return false;
-    }
-
-    List<Map<String, dynamic>> tables = await db.query('sqlite_master');
+  Future<bool> tableExists(Database database, String tableName) async {
+    final database = await _database;
+    List<Map<String, dynamic>> tables = await database.query('sqlite_master');
 
     return tables.any((table) => table['name'] == tableName);
   }
 
   @override
-  Future insert({required Entity entity}) async {
-    final db = await _provider.database;
-    if (db == null || entity.table == null) {
-      return;
-    }
-    await _insert(entity, db);
+  Future<int> insert<T extends Entity>({required T entity}) async {
+    final database = await _database;
 
-    await _close();
+    final id = await _insert(database, entity);
+    await database.close();
+
+    return id;
   }
 
   @override
-  Future insertAll({required List<Entity> entities}) async {
-    final db = await _provider.database;
-    if (db == null) {
-      return;
-    }
+  Future insertAll<T extends Entity>({required List<T> entities}) async {
+    final database = await _database;
 
     for (var entity in entities) {
-      await _insert(entity, db);
+      await _insert(database, entity);
     }
 
-    await _close();
+    await database.close();
   }
 
-  Future _insert(Entity entity, Database db) async {
-    final String table = entity.table!;
-
-    bool mTableExists = await tableExists(table);
+  Future<int> _insert(Database database, Entity entity) async {
+    bool mTableExists = await tableExists(database, entity.table);
     if (!mTableExists) {
-      await db.execute(entity.createTable());
+      await database.execute(entity.createTable());
     }
 
-    if (entity.table != null) {
-      await db.insert(
-        table,
-        entity.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
+    return await database.insert(
+      entity.table,
+      entity.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   @override
-  Future<Entity> get<Entity>(int id) {
-    // TODO: implement get
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Entity>?> getAll<Entity>({
+  Future<T?> get<T extends Entity>(
+    int id, {
+    required T Function(Map<String, Object?>) toEntity,
     required String table,
-    required Entity Function(Map<String, Object?>) fromMap,
   }) async {
-    List<Entity>? entities;
-    final db = await _provider.database;
-    if (db == null) {
-      return null;
-    }
+    final database = await _database;
 
-    bool mTableExists = await tableExists(table);
+    final result = await database.rawQuery(
+      'SELECT * FROM $table WHERE id = ?',
+      [id],
+    );
+
+    if (result.isEmpty) return null;
+    return toEntity.call(result.first);
+  }
+
+  @override
+  Future<List<T>?> getAll<T extends Entity>({
+    required String table,
+    required T Function(Map<String, Object?>) fromMap,
+  }) async {
+    List<T>? entities;
+    final database = await _database;
+
+    bool mTableExists = await tableExists(database, table);
     if (!mTableExists) {
       return null;
     }
 
-    final result = await db.query(table);
+    final result = await database.query(table);
     entities = result.map(fromMap).toList();
 
-    await _close();
+    await database.close();
 
     return entities;
   }
 
   @override
-  Future<bool> containsEntity({
-    required Entity entity,
+  Future<bool> containsEntity<T extends Entity>({
+    required T entity,
   }) async {
-    final db = await _provider.database;
+    final database = await _database;
 
-    if (entity.table == null) {
-      throw ArgumentError("Entity table must not be null", "$entity");
-    }
-
-    final String table = entity.table!;
-
-    if (db == null) return false;
-
-    bool mTableExists = await tableExists(table);
+    bool mTableExists = await tableExists(database, entity.table);
     if (!mTableExists) return false;
 
     final entityMap = entity.toMap();
-    String where = entityMap.keys.map((e) => "$e = ?").join(' AND ');
+    String whereCondition = entityMap.keys.map((e) => "$e = ?").join(' AND ');
 
-    final result = await db.query(
-      table,
-      where: where,
+    final result = await database.query(
+      entity.table,
+      where: whereCondition,
       whereArgs: entityMap.values.toList(),
     );
 
-    await _close();
+    await database.close();
 
     return result.isNotEmpty;
   }
 
-  Future<void> _close() async {
-    final bool isTesting = (await _provider.path) == inMemoryDatabasePath;
-    if (isTesting) return;
+  @override
+  Future<int> deleteWithArgs({
+    required String table,
+    required Map<String, dynamic> args,
+  }) async {
+    final database = await _database;
+    String whereCondition = args.keys.map((e) => "$e = ?").join(' AND ');
+    List<dynamic> whereValues = args.values.map((e) => e).toList();
 
-    await _provider.close();
+    return await database.rawDelete(
+      'DELETE FROM $table where $whereCondition',
+      whereValues,
+    );
+  }
+
+  @override
+  Future<int> delete<T extends Entity>(T? entity) async {
+    final database = await _database;
+    final result = await _delete(database, entity?.table, entity?.id);
+    await database.close();
+    return result;
+  }
+
+  @override
+  Future<int> deleteWithId({required String table, required int? id}) async {
+    final database = await _database;
+    final result = await _delete(database, table, id);
+    await database.close();
+    return result;
+  }
+
+  Future<int> _delete(Database database, String? table, int? id) async {
+    return await database.rawDelete(
+      'DELETE FROM $table WHERE id = ?',
+      [id],
+    );
   }
 }

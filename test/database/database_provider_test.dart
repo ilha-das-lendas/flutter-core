@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/database/provider/database_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'database_provider_impl_test.dart';
 import 'di/di.dart';
 import 'model/dummy_entity.dart';
 
@@ -17,31 +20,58 @@ void main() {
     'Should return false when `tableExists()` is called and the table isn`t created yet',
     () async {
       final dao = getIt.get<DataAccessObject>();
+      final database = await getIt.get<DatabaseProvider>().database;
 
-      final tableExists = await dao.tableExists(DummyTable.tableName);
+      final tableExists = await dao.tableExists(database, DummyTable.tableName);
       expect(tableExists, false);
-
-      await getIt.get<DatabaseProvider>().close();
     },
   );
 
   test(
-    'Should create table when try to insert an entity and the table does not exist yet',
+    'Should return the deletion result when an entity is deleted by id',
+    () async {
+      final DataAccessObject dao = getIt.get();
+      final insertionResultId = await dao.insert(
+        entity: DummyEntity(null, "dummy_1"),
+      );
+      // expect(insertionResultId, 1);
+
+      final deletionResultCount = await dao.deleteWithId(
+        table: DummyTable.tableName,
+        id: insertionResultId,
+      );
+      expect(deletionResultCount, 1);
+    },
+  );
+
+  test(
+    'Should return null when call `getAll` and has no data to map in the database',
     () async {
       final DataAccessObject dao = getIt.get();
 
-      final tableExistsBeforeInsert = await dao.tableExists(
-        DummyTable.tableName,
+      final result = await dao.getAll<DummyEntity>(
+        table: DummyTable.tableName,
+        fromMap: DummyEntity.fromMap,
       );
-      expect(tableExistsBeforeInsert, false);
 
-      await dao.insert(entity: DummyEntity(null, "dummy_1"));
-      final tableExistsAfterInsert = await dao.tableExists(
-        DummyTable.tableName,
+      expect(result, isNull);
+    },
+  );
+
+  test(
+    'Should return empty list when call `getAll`, the table exists but has no data',
+    () async {
+      final database = await getIt.get<DatabaseProvider>().database;
+      final DataAccessObject dao = getIt.get();
+
+      await database.execute(DummyTable.createTable);
+
+      final result = await dao.getAll<DummyEntity>(
+        table: DummyTable.tableName,
+        fromMap: DummyEntity.fromMap,
       );
-      expect(tableExistsAfterInsert, true);
 
-      await getIt.get<DatabaseProvider>().close();
+      expect(result, isEmpty);
     },
   );
 }

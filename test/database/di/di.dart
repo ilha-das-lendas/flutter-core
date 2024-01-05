@@ -13,6 +13,6 @@ void setupDatabaseDi() {
   );
 
   getIt.registerSingleton<DataAccessObject>(
-    DataAccessObjectImpl(),
+    DataAccessObjectImpl(getIt.get()),
   );
 }

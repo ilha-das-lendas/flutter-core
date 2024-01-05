@@ -1,18 +1,32 @@
 import 'package:flutter_core/datasources/local/entity.dart';
+import 'package:sqflite/sqflite.dart';
 
 abstract class DataAccessObject {
-  Future insert({required Entity entity});
+  Future<int> insert<T extends Entity>({required T entity});
 
-  Future<Entity?> get<Entity>(int id);
+  Future<int> delete<T extends Entity>(T? entity);
 
-  Future<List<Entity>?> getAll<Entity>({
+  Future<int> deleteWithArgs({
     required String table,
-    required Entity Function(Map<String, Object?>) fromMap,
+    required Map<String, dynamic> args,
   });
 
-  Future insertAll({required List<Entity> entities});
+  Future<int> deleteWithId({required String table, required int? id});
 
-  Future<bool> containsEntity({required Entity entity});
+  Future<T?> get<T extends Entity>(
+    int id, {
+    required String table,
+    required T Function(Map<String, Object?>) toEntity,
+  });
 
-  Future<bool> tableExists(String tableName);
+  Future<List<T>?> getAll<T extends Entity>({
+    required String table,
+    required T Function(Map<String, Object?>) fromMap,
+  });
+
+  Future insertAll<T extends Entity>({required List<T> entities});
+
+  Future<bool> containsEntity<T extends Entity>({required T entity});
+
+  Future<bool> tableExists(Database database, String tableName);
 }
