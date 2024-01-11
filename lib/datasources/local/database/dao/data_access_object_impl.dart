@@ -27,7 +27,6 @@ class DataAccessObjectImpl implements DataAccessObject {
     final database = await _database;
 
     final id = await _insert(database, entity);
-    await database.close();
 
     return id;
   }
@@ -39,8 +38,6 @@ class DataAccessObjectImpl implements DataAccessObject {
     for (var entity in entities) {
       await _insert(database, entity);
     }
-
-    await database.close();
   }
 
   Future<int> _insert(Database database, Entity entity) async {
@@ -89,8 +86,6 @@ class DataAccessObjectImpl implements DataAccessObject {
     final result = await database.query(table);
     entities = result.map(fromMap).toList();
 
-    await database.close();
-
     return entities;
   }
 
@@ -111,8 +106,6 @@ class DataAccessObjectImpl implements DataAccessObject {
       where: whereCondition,
       whereArgs: entityMap.values.toList(),
     );
-
-    await database.close();
 
     return result.isNotEmpty;
   }
@@ -136,7 +129,6 @@ class DataAccessObjectImpl implements DataAccessObject {
   Future<int> delete<T extends Entity>(T? entity) async {
     final database = await _database;
     final result = await _delete(database, entity?.table, entity?.id);
-    await database.close();
     return result;
   }
 
@@ -144,7 +136,6 @@ class DataAccessObjectImpl implements DataAccessObject {
   Future<int> deleteWithId({required String table, required int? id}) async {
     final database = await _database;
     final result = await _delete(database, table, id);
-    await database.close();
     return result;
   }
 

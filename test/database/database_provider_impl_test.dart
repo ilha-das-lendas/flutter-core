@@ -9,11 +9,18 @@ class DatabaseProviderImplTest implements DatabaseProvider {
   Future<String> get path async => inMemoryDatabasePath;
 
   @override
-  Future<void> close() async => {
-    'the :memory: database should be closed only when the test finish'
-  };
+  Future<void> close() async => (await _database).close();
 
   Future<Database> get _database async => await databaseFactoryFfi.openDatabase(
         inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          onOpen: (database) async {
+            Future.delayed(const Duration(seconds: 3), () {
+              throw Exception(
+                "Database timeout, it is open form more than 3 seconds",
+              );
+            });
+          },
+        ),
       );
 }

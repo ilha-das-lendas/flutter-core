@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
@@ -14,6 +15,23 @@ void main() {
   setUpAll(() {
     setupDatabaseDi();
     databaseFactory = databaseFactoryFfi;
+  });
+
+  test('Database should not be open for more than 3', () async {
+    await runZonedGuarded(() async {
+      final database = await getIt.get<DatabaseProvider>().database;
+      await Future.delayed(const Duration(seconds: 4));
+      await database.rawQuery(DummyTable.createTable);
+      await database.insert(
+        DummyTable.tableName,
+        DummyEntity(null, "dummy_1").toMap(),
+      );
+    }, (error, stack) {
+      expect(
+        error.toString(),
+        "Exception: Database timeout, it is open form more than 3 seconds",
+      );
+    });
   });
 
   test(
