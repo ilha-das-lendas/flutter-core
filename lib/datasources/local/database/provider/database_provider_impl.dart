@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_core/datasources/local/database/provider/database_provider.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path/path.dart';
@@ -19,9 +21,11 @@ class DatabaseProviderImpl extends DatabaseProvider {
       join(await _path, _dbName),
       version: 1,
       onOpen: (database) async {
-        Future.delayed(const Duration(seconds: 3), () {
-          throw Exception(
+        const duration = Duration(seconds: 3);
+        Future.delayed(duration, () {
+          throw TimeoutException(
             "Database timout excpetion, it is open form more than 3 seconds",
+            duration
           );
         });
       },

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_core/datasources/local/database/provider/database_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -15,9 +17,11 @@ class DatabaseProviderImplTest implements DatabaseProvider {
         inMemoryDatabasePath,
         options: OpenDatabaseOptions(
           onOpen: (database) async {
-            Future.delayed(const Duration(seconds: 3), () {
-              throw Exception(
-                "Database timeout, it is open form more than 3 seconds",
+            const duration = Duration(seconds: 3);
+            Future.delayed(duration, () {
+              throw TimeoutException(
+                "Database timout excpetion, it is open form more than 3 seconds",
+                duration,
               );
             });
           },

@@ -29,7 +29,7 @@ void main() {
     }, (error, stack) {
       expect(
         error.toString(),
-        "Exception: Database timeout, it is open form more than 3 seconds",
+        "TimeoutException after 0:00:03.000000: Database timout excpetion, it is open form more than 3 seconds",
       );
     });
   });
