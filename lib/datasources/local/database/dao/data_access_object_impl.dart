@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/entity.dart';
-import 'package:get_it/get_it.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../provider/database_provider.dart';

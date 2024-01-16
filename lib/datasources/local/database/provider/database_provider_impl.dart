@@ -33,5 +33,6 @@ class DatabaseProviderImpl extends DatabaseProvider {
     );
   }
 
+  @override
   Future<void> close() async => await (await database).close();
 }
