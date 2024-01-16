@@ -21,12 +21,14 @@ abstract class DataAccessObject {
 
   Future<List<T>?> getAll<T extends Entity>({
     required String table,
-    required T Function(Map<String, Object?>) fromMap,
+    required T Function(Map<String, Object?>) toEntity,
   });
 
-  Future insertAll<T extends Entity>({required List<T> entities});
+  Future<List<int>> insertAll<T extends Entity>({required List<T> entities});
 
   Future<bool> containsEntity<T extends Entity>({required T entity});
 
   Future<bool> tableExists(Database database, String tableName);
+
+  Future<void> close();
 }

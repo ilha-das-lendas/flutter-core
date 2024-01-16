@@ -32,12 +32,15 @@ class DataAccessObjectImpl implements DataAccessObject {
   }
 
   @override
-  Future insertAll<T extends Entity>({required List<T> entities}) async {
+  Future<List<int>> insertAll<T extends Entity>(
+      {required List<T> entities}) async {
     final database = await _database;
-
+    List<int> ids = [];
     for (var entity in entities) {
-      await _insert(database, entity);
+      final result = await _insert(database, entity);
+      ids.add(result);
     }
+    return ids;
   }
 
   Future<int> _insert(Database database, Entity entity) async {
@@ -61,6 +64,10 @@ class DataAccessObjectImpl implements DataAccessObject {
   }) async {
     final database = await _database;
 
+    if (!(await tableExists(database, table))) {
+      return null;
+    }
+
     final result = await database.rawQuery(
       'SELECT * FROM $table WHERE id = ?',
       [id],
@@ -73,7 +80,7 @@ class DataAccessObjectImpl implements DataAccessObject {
   @override
   Future<List<T>?> getAll<T extends Entity>({
     required String table,
-    required T Function(Map<String, Object?>) fromMap,
+    required T Function(Map<String, Object?>) toEntity,
   }) async {
     List<T>? entities;
     final database = await _database;
@@ -84,7 +91,7 @@ class DataAccessObjectImpl implements DataAccessObject {
     }
 
     final result = await database.query(table);
-    entities = result.map(fromMap).toList();
+    entities = result.map(toEntity).toList();
 
     return entities;
   }
@@ -145,4 +152,7 @@ class DataAccessObjectImpl implements DataAccessObject {
       [id],
     );
   }
+
+  @override
+  Future<void> close() async => (await _database).close();
 }

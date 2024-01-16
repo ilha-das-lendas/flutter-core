@@ -36,7 +36,7 @@ void main() {
       when(
         database.getAll(
           table: DummyTable.tableName,
-          fromMap: DummyEntity.fromMap,
+          toEntity: DummyEntity.fromMap,
         ),
       ).thenAnswer((realInvocation) async => dummyEntityList);
 
@@ -45,8 +45,9 @@ void main() {
           query: () async {
             final result = await database.getAll<DummyEntity>(
               table: DummyTable.tableName,
-              fromMap: DummyEntity.fromMap,
+              toEntity: DummyEntity.fromMap,
             );
+
             return result ?? [];
           },
         ),

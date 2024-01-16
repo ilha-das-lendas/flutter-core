@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter_core/datasources/local/database/dao/data_access_object.dart';
 import 'package:flutter_core/datasources/local/database/provider/database_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'database_provider_impl_test.dart';
 import 'di/di.dart';
 import 'model/dummy_entity.dart';
 
@@ -26,10 +24,11 @@ void main() {
         DummyTable.tableName,
         DummyEntity(null, "dummy_1").toMap(),
       );
+      await database.close();
     }, (error, stack) {
       expect(
         error.toString(),
-        "TimeoutException after 0:00:03.000000: Database timout excpetion, it is open form more than 3 seconds",
+        "TimeoutException after 0:00:03.000000: Database timout excpetion, it is open from more than 3 seconds",
       );
     });
   });
@@ -41,7 +40,28 @@ void main() {
       final database = await getIt.get<DatabaseProvider>().database;
 
       final tableExists = await dao.tableExists(database, DummyTable.tableName);
+      await dao.close();
+
       expect(tableExists, false);
+    },
+  );
+
+  test(
+    'Should return the inserted object id when insert with success',
+    () async {
+      final DataAccessObject dao = getIt.get();
+      final insertionResultId = await dao.insert(
+        entity: DummyEntity(null, "dummy_1"),
+      );
+
+      expect(insertionResultId, 1);
+
+      await dao.deleteWithId(
+        table: DummyTable.tableName,
+        id: insertionResultId,
+      );
+
+      await dao.close();
     },
   );
 
@@ -52,12 +72,14 @@ void main() {
       final insertionResultId = await dao.insert(
         entity: DummyEntity(null, "dummy_1"),
       );
-      // expect(insertionResultId, 1);
 
       final deletionResultCount = await dao.deleteWithId(
         table: DummyTable.tableName,
         id: insertionResultId,
       );
+
+      await dao.close();
+
       expect(deletionResultCount, 1);
     },
   );
@@ -69,8 +91,10 @@ void main() {
 
       final result = await dao.getAll<DummyEntity>(
         table: DummyTable.tableName,
-        fromMap: DummyEntity.fromMap,
+        toEntity: DummyEntity.fromMap,
       );
+
+      await dao.close();
 
       expect(result, isNull);
     },
@@ -86,10 +110,83 @@ void main() {
 
       final result = await dao.getAll<DummyEntity>(
         table: DummyTable.tableName,
-        fromMap: DummyEntity.fromMap,
+        toEntity: DummyEntity.fromMap,
       );
 
+      await dao.close();
       expect(result, isEmpty);
+    },
+  );
+
+  test(
+    'Should return a list with items when call `getAll`, the table exists and has data',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      await dao.insert(
+        entity: DummyEntity(null, "dummy_1"),
+      );
+
+      final result = await dao.getAll<DummyEntity>(
+        table: DummyTable.tableName,
+        toEntity: DummyEntity.fromMap,
+      );
+
+      await dao.close();
+      expect(result, isNotNull);
+      expect(result, isNotEmpty);
+    },
+  );
+
+  test(
+    'Should return the inserted id list when insert more than one entity at time',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      List<DummyEntity> dummies = [
+        DummyEntity(null, "dummy_1"),
+        DummyEntity(null, "dummy_2"),
+        DummyEntity(null, "dummy_3"),
+      ];
+
+      final result = await dao.insertAll(entities: dummies);
+
+      await dao.close();
+      expect(result, isNotEmpty);
+    },
+  );
+
+  test(
+    'Should return null when the entity does not exists',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      final result = await dao.get(
+        1,
+        table: DummyTable.tableName,
+        toEntity: DummyEntity.fromMap,
+      );
+
+      await dao.close();
+      expect(result, isNull);
+    },
+  );
+
+  test(
+    'Should return the entity when the database has value',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      final id = await dao.insert(entity: DummyEntity(null, 'dummy_1'));
+      final result = await dao.get(
+        id,
+        table: DummyTable.tableName,
+        toEntity: DummyEntity.fromMap,
+      );
+
+      await dao.close();
+      expect(result, isNotNull);
+      expect(result?.self, equals('dummy_1'));
     },
   );
 }

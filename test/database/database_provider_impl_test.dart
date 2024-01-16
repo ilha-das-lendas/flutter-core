@@ -18,9 +18,9 @@ class DatabaseProviderImplTest implements DatabaseProvider {
         options: OpenDatabaseOptions(
           onOpen: (database) async {
             const duration = Duration(seconds: 3);
-            Future.delayed(duration, () {
+            Future.delayed(duration, () async {
               throw TimeoutException(
-                "Database timout excpetion, it is open form more than 3 seconds",
+                "Database timout excpetion, it is open from more than 3 seconds",
                 duration,
               );
             });

@@ -22,10 +22,11 @@ class DatabaseProviderImpl extends DatabaseProvider {
       version: 1,
       onOpen: (database) async {
         const duration = Duration(seconds: 3);
-        Future.delayed(duration, () {
+        Future.delayed(duration, () async {
+          await close();
           throw TimeoutException(
-            "Database timout excpetion, it is open form more than 3 seconds",
-            duration
+            "Database timout excpetion, it is open from more than 3 seconds",
+            duration,
           );
         });
       },
