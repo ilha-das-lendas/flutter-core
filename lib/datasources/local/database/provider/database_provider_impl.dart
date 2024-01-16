@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_core/datasources/local/database/provider/database_provider.dart';
-import 'package:get_it/get_it.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
