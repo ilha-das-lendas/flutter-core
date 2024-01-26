@@ -26,6 +26,7 @@ jobs:
           sed -i "s/$current_version/$new_version/g" pubspec.yaml
   
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -37,6 +38,7 @@ jobs:
       - run: flutter analyze
   
   tests:
+    name: Tests Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +56,7 @@ jobs:
           # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
           cat coverage/lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> COVERAGE.md
           echo "## Resultados dos testes" >> COVERAGE.md
-          python -c "import json; with open('test-results.json') as f: results = json.load(f); for test in results['tests']: print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a'))"
+          python -c "import json; with open('test-results.json') as f: results = json.load(f); [print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a')) for test in results['tests']]"
   
       - name: Commit coverage report
         run: |
