@@ -189,4 +189,57 @@ void main() {
       expect(result?.self, equals('dummy_1'));
     },
   );
+
+  test(
+    'Should return true when the database contains the entity',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      final entity = DummyEntity(1, 'dummy_1');
+      await dao.insert(entity: entity);
+      final containsEntity = await dao.containsEntity(entity: entity);
+
+      expect(containsEntity, true);
+
+      await dao.delete(entity);
+      await dao.close();
+    },
+  );
+
+  test(
+    'Should return false when does not contain the entity',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      await dao.insert(entity: DummyEntity(null, 'dummy_1'));
+      final containsEntity = await dao.containsEntity(
+        entity: DummyEntity(2, 'dummy_1'),
+      );
+
+      expect(containsEntity, false);
+
+      await dao.deleteWithId(id: 1, table: DummyTable.tableName);
+      await dao.close();
+    },
+  );
+
+  test(
+    'Should find and delete a specific entity that matches with the args passed as arguments',
+    () async {
+      final DataAccessObject dao = getIt.get();
+
+      await dao.insert(entity: DummyEntity(null, 'dummy_1'));
+
+      final deletedEntitiesQuantity = await dao.deleteWithArgs(
+        table: DummyTable.tableName,
+        args: {
+          DummyTable.columnSelf: 'dummy_1',
+        },
+      );
+
+      await dao.close();
+
+      expect(deletedEntitiesQuantity, 1);
+    },
+  );
 }
