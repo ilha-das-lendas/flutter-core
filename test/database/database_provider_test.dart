@@ -11,7 +11,7 @@ import 'model/dummy_entity.dart';
 void main() {
   sqfliteFfiInit();
   setUpAll(() {
-    setupDatabaseDi();
+    setupDatabase();
     databaseFactory = databaseFactoryFfi;
   });
 

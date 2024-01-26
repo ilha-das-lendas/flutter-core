@@ -26,7 +26,7 @@ final List<DummyEntity> dummyEntityList = [
 
 void main() {
   setUpAll(() {
-    setupDatabaseDi();
+    setupDatabase();
   });
 
   test(
