@@ -56,8 +56,14 @@ jobs:
           echo "# Cobertura de testes" > COVERAGE.md
           echo "## Cobertura geral" >> COVERAGE.md
           # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
-          cat lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> coverage.md
+          cat lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> COVERAGE.md
           echo "## Resultados dos testes" >> COVERAGE.md
           python -c "import json; with open('test-results.json') as f: results = json.load(f); for test in results['tests']: print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a'))"
+      
+      - name: Commit coverage report
+        run: |
+          git add coverage.md
+          git commit -m "Add coverage report"
+          git push
 
   
