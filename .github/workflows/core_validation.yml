@@ -29,6 +29,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am ":bookmark: Update version to $new_version"
           git push
+  
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +40,7 @@ jobs:
       - run: flutter pub get
       - run: flutter pub run build_runner build
       - run: flutter analyze
+  
   tests:
     runs-on: ubuntu-latest
     steps:
@@ -48,22 +50,25 @@ jobs:
           channel: "stable"
       - run: flutter pub get
       - run: flutter pub run build_runner build
-      - run: flutter test --coverage
       - run: flutter test --coverage --reporter=json | tee test-results.json
-      
-      - name: Generate coverage report
-        run: |
-          echo "# Cobertura de testes" > COVERAGE.md
-          echo "## Cobertura geral" >> COVERAGE.md
-          # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
-          cat coverage/lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> COVERAGE.md
-          echo "## Resultados dos testes" >> COVERAGE.md
-          python -c "import json; with open('test-results.json') as f: results = json.load(f); for test in results['tests']: print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a'))"
-      
-      - name: Commit coverage report
-        run: |
-          git add coverage.md
-          git commit -m "Add coverage report"
-          git push
+
+  coverage_report:
+    runs-on: ubuntu-latest
+    needs: [tests]
+    steps:
+    - name: Generate coverage report
+      run: |
+        echo "# Cobertura de testes" > COVERAGE.md
+        echo "## Cobertura geral" >> COVERAGE.md
+        # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
+        cat coverage/lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> COVERAGE.md
+        echo "## Resultados dos testes" >> COVERAGE.md
+        python -c "import json; with open('test-results.json') as f: results = json.load(f); for test in results['tests']: print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a'))"
+    
+    - name: Commit coverage report
+      run: |
+        git add coverage.md
+        git commit -m "Add coverage report"
+        git push
 
   
