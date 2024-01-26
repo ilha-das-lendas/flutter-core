@@ -57,7 +57,7 @@ jobs:
     needs: [tests]
     steps:
       - name: Find coverage file
-        run: ls
+        run: pwd
       - name: Generate coverage report
         run: |
           echo "# Cobertura de testes" > COVERAGE.md
