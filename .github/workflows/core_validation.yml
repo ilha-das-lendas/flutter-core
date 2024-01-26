@@ -56,9 +56,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [tests]
     steps:
-      - name: Generate coverage report
+      - name: Find coverage file
         run: |
           ls
+      - name: Generate coverage report
+        run: |
           echo "# Cobertura de testes" > COVERAGE.md
           echo "## Cobertura geral" >> COVERAGE.md
           # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
