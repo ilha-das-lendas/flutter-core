@@ -8,11 +8,11 @@ on:
       - release/*
   pull_request:
     branches:
-      - master    
+      - master
 jobs:
   update_version:
     runs-on: ubuntu-latest
-    needs: [lint, tests]
+    needs: [ lint, tests ]
     steps:
       - uses: actions/checkout@v2
       - name: Update version
@@ -46,16 +46,10 @@ jobs:
       - run: flutter pub get
       - run: flutter pub run build_runner build
       - run: flutter test --coverage --reporter=json | tee test-results.json
-      
+
       - name: Generate coverage report
-        run: |
-          echo "# Cobertura de testes" > COVERAGE.md
-          echo "## Cobertura geral" >> COVERAGE.md
-          # Extraia a porcentagem de cobertura do arquivo lcov.info (ajuste o comando se necessário)
-          cat coverage/lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> COVERAGE.md
-          echo "## Resultados dos testes" >> COVERAGE.md
-          python -c "import json; with open('test-results.json') as f: results = json.load(f); [print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a')) for test in results['tests']]"
-  
+        run: python generate_coverage_report.py
+
       - name: Commit coverage report
         run: |
           # Commit and push the changes
