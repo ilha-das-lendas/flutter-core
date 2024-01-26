@@ -45,10 +45,7 @@ jobs:
           channel: "stable"
       - run: flutter pub get
       - run: flutter pub run build_runner build
-      - run: flutter test --coverage --reporter=json | tee test-results.json
-
-      - name: Generate coverage report
-        run: python generate_coverage_report.py
+      - run: flutter test --coverage --reporter=github | tee COVERAGE.md
 
       - name: Commit coverage report
         run: |

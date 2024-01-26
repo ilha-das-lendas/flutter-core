@@ -29,69 +29,71 @@ void main() {
     setupDatabase();
   });
 
-  test(
-    'DataBoundResource should send the database result when the query finish',
-    () async {
-      var database = MockDataAccessObjectImpl();
-      when(
-        database.getAll(
-          table: DummyTable.tableName,
-          toEntity: DummyEntity.fromMap,
-        ),
-      ).thenAnswer((realInvocation) async => dummyEntityList);
+  group('DataBoundResource test group: ', () {
+    test(
+      'DataBoundResource should send the database result when the query finish',
+      () async {
+        var database = MockDataAccessObjectImpl();
+        when(
+          database.getAll(
+            table: DummyTable.tableName,
+            toEntity: DummyEntity.fromMap,
+          ),
+        ).thenAnswer((realInvocation) async => dummyEntityList);
 
-      final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-        localStrategy: LocalResourceStrategy.handler(
-          query: () async {
-            final result = await database.getAll<DummyEntity>(
-              table: DummyTable.tableName,
-              toEntity: DummyEntity.fromMap,
-            );
+        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
+          localStrategy: LocalResourceStrategy.handler(
+            query: () async {
+              final result = await database.getAll<DummyEntity>(
+                table: DummyTable.tableName,
+                toEntity: DummyEntity.fromMap,
+              );
 
-            return result ?? [];
-          },
-        ),
-      ).build();
-      final resource = await dataBoundResource.localCompleter;
-      assert(resource.data is List<DummyEntity>);
-    },
-  );
+              return result ?? [];
+            },
+          ),
+        ).build();
+        final resource = await dataBoundResource.localCompleter;
+        assert(resource.data is List<DummyEntity>);
+      },
+    );
 
-  test(
-    'Should not be possible to return the network result without mapping',
-    () async {
-      final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-        remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
-          fetch: () async {
-            return ResponseWrapper(
-              status: HttpStatus.ok,
-              data: dummyEntityList,
-            );
-          },
-          // mapServiceResult: (wrapper) => wrapper.data,
-        ),
-      ).build();
-      final resource = await dataBoundResource.networkCompleter;
-      expect(resource.status, Status.error);
-    },
-  );
+    test(
+      'Should not be possible to return the network result without mapping',
+      () async {
+        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
+          remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
+            fetch: () async {
+              return ResponseWrapper(
+                status: HttpStatus.ok,
+                data: dummyEntityList,
+              );
+            },
+            // mapServiceResult: (wrapper) => wrapper.data,
+          ),
+        ).build();
+        final resource = await dataBoundResource.networkCompleter;
+        expect(resource.status, Status.error);
+      },
+    );
 
-  test(
-    'DataBoundResource should send the network result when the fetch finish',
-    () async {
-      final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-        remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
-          fetch: () async {
-            return ResponseWrapper(
-              status: HttpStatus.ok,
-              data: dummyEntityList,
-            );
-          },
-          mapServiceResult: (wrapper) => wrapper.data,
-        ),
-      ).build();
-      final resource = await dataBoundResource.networkCompleter;
-      assert(resource.data is List<DummyEntity>);
-    },
-  );
+    test(
+      'DataBoundResource should send the network result when the fetch finish',
+      () async {
+        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
+          remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
+            fetch: () async {
+              return ResponseWrapper(
+                status: HttpStatus.ok,
+                data: dummyEntityList,
+              );
+            },
+            mapServiceResult: (wrapper) => wrapper.data,
+          ),
+        ).build();
+        final resource = await dataBoundResource.networkCompleter;
+        assert(resource.data is List<DummyEntity>);
+      },
+    );
+  });
 }
