@@ -49,3 +49,15 @@ jobs:
       - run: flutter pub get
       - run: flutter pub run build_runner build
       - run: flutter test --coverage
+      - run: flutter test --coverage --reporter=json | tee test-results.json
+      
+      - name: Generate coverage report
+        run: |
+          echo "# Cobertura de testes" > COVERAGE.md
+          echo "## Cobertura geral" >> COVERAGE.md
+          # Extraia a porcentagem de cobertura do arquivo lcov.info (adapte o comando se necessário)
+          cat lcov.info | grep -Po 'Lines executed: \d+' | cut -d ':' -f 2 | xargs echo | tr -d ' ' >> coverage.md
+          echo "## Resultados dos testes" >> COVERAGE.md
+          python -c "import json; with open('test-results.json') as f: results = json.load(f); for test in results['tests']: print(f'- {test["name"]}: {test["status"]}', file=open('COVERAGE.md', 'a'))"
+
+  
