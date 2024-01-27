@@ -49,8 +49,11 @@ jobs:
       - run: apt install lcov
       - run: genhtml flutter-core/coverage/lcov.info --output=./coverage
 
+  commit_changes:
+    runs-on: ubuntu-latest
+    needs: [ lint, tests ]
+    steps:
       - name: Commit coverage report
-        needs: [ lint, tests ]
         run: |
           # Commit and push the changes
           git config user.name "GitHub Actions"
