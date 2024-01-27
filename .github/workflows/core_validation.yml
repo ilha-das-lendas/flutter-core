@@ -50,6 +50,7 @@ jobs:
       - run: genhtml flutter-core/coverage/lcov.info --output=./coverage
 
       - name: Commit coverage report
+        needs: [ lint, tests ]
         run: |
           # Commit and push the changes
           git config user.name "GitHub Actions"
