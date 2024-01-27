@@ -46,9 +46,12 @@ jobs:
       - run: flutter pub get
       - run: flutter pub run build_runner build
       - run: flutter test --coverage
-      # - run: apt install lcov
-      - run: genhtml coverage/lcov.info --output=./coverage
 
+      - name: Report LCOV
+        uses: zgosalvez/github-actions-report-lcov@v4.1.2
+        with:
+          coverage-files: coverage/lcov.info
+          
       - name: Commit coverage report
         run: |
           # Commit and push the changes
