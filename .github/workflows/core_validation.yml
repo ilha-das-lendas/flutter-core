@@ -37,12 +37,15 @@ jobs:
       - name: Execute tests with coverage
         run: flutter test --coverage
 
-      - name: Record LCOV
-        uses: dethereum/github-actions-report-lcov@v1.0.0
+      - name: Test Reporting
+        uses: phoenix-actions/test-reporting@v12
         with:
-          coverage-files: coverage/lcov.info
-          artifact-name: COVERAGE
+          path-replace-backslashes: flutter-json      
+          reporter: all
 
+          list-suites: all
+          list-tests: all
+          
       - name: Update version
         run: |
           # Get the current version from pubspec.yaml
