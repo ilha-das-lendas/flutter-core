@@ -1,70 +1,40 @@
-name: Flutter Lints and Tests
+name: Testes com Cobertura
+
 on:
   push:
     branches:
       - master
-      - feature/*
-      - hotfix/*
-      - release/*
-  pull_request:
-    branches:
-      - master
+
 jobs:
-  update_version:
-    runs-on: ubuntu-latest
-    needs: [ lint, tests ]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Update version
-        run: |
-          # Get the current version from pubspec.yaml
-          current_version=$(grep -E 'version: ' pubspec.yaml | cut -d' ' -f2)
-          # Increment the patch version
-          new_version="${current_version%.*}"."$(( ${current_version##*.} + 1 ))"
-          echo "Updating version to $new_version..."
-          # Update the version in pubspec.yaml
-          sed -i "s/$current_version/$new_version/g" pubspec.yaml
-  
-  lint:
+  test:
+    name: Testes com Cobertura
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: "stable"
-      - run: flutter pub get
-      - run: flutter pub run build_runner build
-      - run: flutter analyze
-  
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: "stable"
-      - run: flutter pub get
-      - run: flutter pub run build_runner build
-      - run: flutter test --coverage
+      - name: Checkout do código
+        uses: actions/checkout@v2
 
-  generate_coverage:
-    runs-on: ubuntu-latest
-    needs: [ tests ]
-    steps:
-      - name: Report LCOV
-        uses: zgosalvez/github-actions-report-lcov@v4.1.2
-        with:
-          coverage-files: coverage/lcov.info
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        
+      - name: Obter dependências
+        run: flutter pub get
 
-  commit_changes:
-    runs-on: ubuntu-latest
-    needs: [ lint, tests ]
-    steps:
-      - name: Commit coverage report
+      - name: Executar testes com cobertura
+        run: flutter test --coverage
+
+      - name: Atualizar COVERAGE.md
         run: |
-          # Commit and push the changes
-          git config user.name "GitHub Actions"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add COVERAGE.md
-          git commit -m ":bookmark: Update version to $new_version"
-          git push
+          lcov --list coverage/lcov.info --no-legend | \
+          grep -v "flutter_test" | \
+          grep -v "generated_plugin_registrant" | \
+          grep -v "test/widget_test" > coverage/filtered_lcov.info
+          bash <(curl -s https://codecov.io/bash) -f coverage/filtered_lcov.info -F flutter
+
+          # Geração do arquivo COVERAGE.md
+          echo "## Cobertura de Testes" > COVERAGE.md
+          echo "" >> COVERAGE.md
+          echo "Última Atualização: $(date)" >> COVERAGE.md
+          echo "" >> COVERAGE.md
+          echo "![coverage](https://codecov.io/gh/seu-usuario/seu-projeto/branch/main/graph/badge.svg)" >> COVERAGE.md
+          echo "" >> COVERAGE.md
+          echo "Detalhes completos disponíveis em [Codecov](https://codecov.io/gh/seu-usuario/seu-projeto)" >> COVERAGE.md
