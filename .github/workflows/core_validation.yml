@@ -1,9 +1,11 @@
 name: Testes com Cobertura
-
 on:
   push:
     branches:
       - master
+      - feature/*
+      - hotfix/*
+      - release/*
 
 jobs:
   test:
