@@ -46,8 +46,6 @@ jobs:
       - run: flutter pub get
       - run: flutter pub run build_runner build
       - run: flutter test --coverage
-      - run: apt install lcov
-      - run: genhtml flutter-core/coverage/lcov.info --output=./coverage
 
   generate_coverage:
     runs-on: ubuntu-latest
