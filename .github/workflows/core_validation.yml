@@ -37,20 +37,8 @@ jobs:
       - name: Execute tests with coverage
         run: flutter test --coverage
 
-      - name: Update COVERAGE.md
-        run: |
-          lcov --list coverage/lcov.info > coverage/lcov_report.txt
-          grep -v "flutter_test" coverage/lcov_report.txt > coverage/filtered_lcov_report.txt
-          bash <(curl -s https://codecov.io/bash) -f coverage/filtered_lcov_report.txt -F flutter
-
-          # Geração do arquivo COVERAGE.md
-          echo "## Cobertura de Testes" > COVERAGE.md
-          echo "" >> COVERAGE.md
-          echo "Última Atualização: $(date)" >> COVERAGE.md
-          echo "" >> COVERAGE.md
-          echo "![coverage](https://codecov.io/gh/seu-usuario/seu-projeto/branch/main/graph/badge.svg)" >> COVERAGE.md
-          echo "" >> COVERAGE.md
-          echo "Detalhes completos disponíveis em [Codecov](https://codecov.io/gh/seu-usuario/seu-projeto)" >> COVERAGE.md
+      - name: Update the coverage result
+        run: genhtml coverage/lcov.info --output=./coverage
 
       - name: Update version
         run: |
