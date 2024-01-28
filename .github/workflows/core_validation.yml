@@ -39,11 +39,9 @@ jobs:
 
       - name: Update COVERAGE.md
         run: |
-          lcov --list coverage/lcov.info --no-legend | \
-          grep -v "flutter_test" | \
-          grep -v "generated_plugin_registrant" | \
-          grep -v "test/widget_test" > coverage/filtered_lcov.info
-          bash <(curl -s https://codecov.io/bash) -f coverage/filtered_lcov.info -F flutter
+          lcov --list coverage/lcov.info > coverage/lcov_report.txt
+          grep -v "flutter_test" coverage/lcov_report.txt > coverage/filtered_lcov_report.txt
+          bash <(curl -s https://codecov.io/bash) -f coverage/filtered_lcov_report.txt -F flutter
 
           # Geração do arquivo COVERAGE.md
           echo "## Cobertura de Testes" > COVERAGE.md
