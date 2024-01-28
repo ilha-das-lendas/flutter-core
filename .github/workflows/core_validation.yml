@@ -40,9 +40,9 @@ jobs:
       - name: Test Reporting
         uses: phoenix-actions/test-reporting@v12
         with:
+          name: Test Reporting
           path-replace-backslashes: flutter-json      
           reporter: all
-
           list-suites: all
           list-tests: all
           
