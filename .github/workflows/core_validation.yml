@@ -42,7 +42,8 @@ jobs:
         with:
           name: Test Reporting
           path: coverage/lcov.info
-          path-replace-backslashes: flutter-json      
+          path-replace-backslashes: flutter-json
+          reporter: all
           
       - name: Update version
         run: |
