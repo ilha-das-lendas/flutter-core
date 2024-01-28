@@ -38,9 +38,10 @@ jobs:
         run: flutter test --coverage
 
       - name: Test Reporting
-        uses: phoenix-actions/test-reporting@v12
+        uses: dorny/test-reporter@v1.7.0
         with:
           name: Test Reporting
+          path: coverage/lcov.info
           path-replace-backslashes: flutter-json      
           reporter: all
           list-suites: all
