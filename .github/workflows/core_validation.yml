@@ -17,9 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: lcov configuration
-        run: sudo apt-get install -y lcov
-
       - name: Flutter configuration
         uses: subosito/flutter-action@v2
         with:
@@ -36,21 +33,6 @@ jobs:
 
       - name: Execute tests with coverage
         run: flutter test --coverage
-
-      - name: Record LCOV
-        uses: dethereum/github-actions-report-lcov@v1.0.0
-        with:
-          artifact-name: COVERAGE
-
-      - name: Update version
-        run: |
-          # Get the current version from pubspec.yaml
-          current_version=$(grep -E 'version: ' pubspec.yaml | cut -d' ' -f2)
-          # Increment the patch version
-          new_version="${current_version%.*}"."$(( ${current_version##*.} + 1 ))"
-          echo "Updating version to $new_version..."
-          # Update the version in pubspec.yaml
-          sed -i "s/$current_version/$new_version/g" pubspec.yaml
 
       - name: Commit the updates
         run: |
