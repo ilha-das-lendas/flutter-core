@@ -1,6 +1,6 @@
 abstract class Entity {
-  int? id;
-  String? table;
+  int? get id;
+  String get table;
 
   String createTable();
 
