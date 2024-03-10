@@ -9,3 +9,9 @@ abstract class ResourceStrategy<T, Y> {
     this.send,
   });
 }
+
+abstract class FutureResourceStrategy<T, Y> {
+  T Function(Y) mapper;
+
+  FutureResourceStrategy.build({required this.mapper});
+}
