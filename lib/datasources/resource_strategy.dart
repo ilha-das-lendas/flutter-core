@@ -1,17 +1,5 @@
-abstract class ResourceStrategy<T, Y> {
-  Future<Y>? Function()? fetch;
-  Future<Y>? Function(dynamic)? send;
-  T Function(Y)? mapper;
+abstract class ResourceStrategy<Result, Raw> {
+  Result Function(Raw) mapper;
 
-  ResourceStrategy.build({
-    this.fetch,
-    this.mapper,
-    this.send,
-  });
-}
-
-abstract class FutureResourceStrategy<T, Y> {
-  T Function(Y) mapper;
-
-  FutureResourceStrategy.build({required this.mapper});
+  ResourceStrategy.build({required this.mapper});
 }
