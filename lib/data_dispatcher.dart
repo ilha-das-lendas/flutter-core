@@ -6,7 +6,7 @@ import 'package:flutter_core/resource.dart';
 
 enum DataSource { database, network }
 
-class Result<T> {
+class DataDispatcher<T> {
   final _receivePort = ReceivePort();
   final Completer<Resource<T>> _networkCompleter = Completer();
   final Completer<Resource<T>> _localCompleter = Completer();

@@ -1,48 +1,53 @@
+import 'package:flutter_core/data_dispatcher.dart';
+import 'package:flutter_core/datasources/local/local_resource_strategy.dart';
 import 'package:flutter_core/datasources/remote/remote_resource_trategy.dart';
 import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
-import 'package:flutter_core/datasources/resource_strategy.dart';
 import 'package:flutter_core/resource.dart';
-import 'package:flutter_core/result.dart';
 
-class DataBoundResource<T> {
-  final ResourceStrategy<T, ResponseWrapper<dynamic>>? remoteStrategy;
-  final ResourceStrategy<T, dynamic>? localStrategy;
-  final Future Function(ResponseWrapper<dynamic>)? saveCallResult;
+class DataSourceMediator<Result, Entity, Network> {
+  final RemoteDataSource<Result, ResponseWrapper<Network>>? _remoteDataSource;
 
-  late final Result<T> _result;
+  final LocalDatasource<Result, Entity>? _localDataSource;
 
-  DataBoundResource({
-    this.remoteStrategy,
-    this.localStrategy,
-    this.saveCallResult,
-  }) : _result = Result<T>();
+  final Future Function(ResponseWrapper<Network>)? _saveCallResult;
 
-  Result<T> build() {
-    if (localStrategy != null) {
+  late final DataDispatcher<Result> _dispatcher;
+
+  DataSourceMediator({
+    RemoteDataSource<Result, ResponseWrapper<Network>>? remoteSource,
+    LocalDatasource<Result, Entity>? localSource,
+    Future<dynamic> Function(ResponseWrapper<Network>)? saveCallResult,
+  })  : _saveCallResult = saveCallResult,
+        _localDataSource = localSource,
+        _remoteDataSource = remoteSource,
+        _dispatcher = DataDispatcher<Result>();
+
+  DataDispatcher<Result> factory() {
+    if (_localDataSource != null) {
       _localFetch();
     }
 
-    if (remoteStrategy != null) {
-      _remoteFetch();
+    if (_remoteDataSource != null) {
+      _createRemoteCall();
     }
 
-    return _result;
+    return _dispatcher;
   }
 
-  Future _remoteFetch() async {
-    if ((remoteStrategy is RemoteResourceStrategy) == false) {
+  Future _createRemoteCall() async {
+    if ((_remoteDataSource is RemoteDataSource) == false) {
       throw Exception(
         "please, use the RemoteBoundResource as remote data resource",
       );
     }
 
-    final wrapper = await remoteStrategy?.fetch?.call();
+    final wrapper = await _remoteDataSource?.fetch?.call();
     if (wrapper == null) {
       _sendError("null wrapper on remoteFetch", DataSource.network);
       return;
     }
 
-    final T? response = remoteStrategy?.mapper?.call(wrapper);
+    final Result? response = _remoteDataSource?.mapper.call(wrapper);
     if (response == null) {
       _sendError("null response on remoteFetch", DataSource.network);
       return;
@@ -50,7 +55,7 @@ class DataBoundResource<T> {
 
     if (wrapper.ok() || wrapper.created()) {
       try {
-        _result.send(
+        _dispatcher.send(
           resource: Resource.success(response),
           dataSource: DataSource.network,
         );
@@ -65,7 +70,7 @@ class DataBoundResource<T> {
         }
         _sendError("remote fetch exception: $e", DataSource.network);
       } finally {
-        await saveCallResult?.call(wrapper);
+        await _saveCallResult?.call(wrapper);
       }
     }
 
@@ -77,26 +82,20 @@ class DataBoundResource<T> {
 
   Future _localFetch() async {
     try {
-      final dynamic data = await this.localStrategy?.fetch?.call();
-      if (localStrategy?.mapper != null) {
-        final T? response = localStrategy?.mapper?.call(data);
-        _result.send(
+      final Entity? databaseResult = await this._localDataSource?.get?.call();
+      if (databaseResult != null) {
+        final Result? response = _localDataSource?.mapper.call(databaseResult);
+        _dispatcher.send(
           resource: Resource.success(response),
           dataSource: DataSource.database,
         );
-        return;
       }
-
-      _result.send(
-        resource: Resource.success(data),
-        dataSource: DataSource.database,
-      );
     } catch (e) {
       _sendError(e.toString(), DataSource.database);
     }
   }
 
   void _sendError(String message, DataSource dataSource) {
-    _result.send(resource: Resource.error(message), dataSource: dataSource);
+    _dispatcher.send(resource: Resource.error(message), dataSource: dataSource);
   }
 }

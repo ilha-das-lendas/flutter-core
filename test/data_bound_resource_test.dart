@@ -1,14 +1,11 @@
+@GenerateNiceMocks([MockSpec<DataAccessObjectImpl>()])
 import 'dart:io';
 
 import 'package:flutter_core/data_bound_resource.dart';
-
-@GenerateNiceMocks([MockSpec<DataAccessObjectImpl>()])
 import 'package:flutter_core/datasources/local/database/dao/data_access_object_impl.dart';
-
 import 'package:flutter_core/datasources/local/local_resource_strategy.dart';
 import 'package:flutter_core/datasources/remote/remote_resource_trategy.dart';
 import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
-import 'package:flutter_core/resource.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -16,13 +13,8 @@ import 'package:mockito/mockito.dart';
 import 'data_bound_resource_test.mocks.dart';
 import 'database/di/di.dart';
 import 'database/model/dummy_entity.dart';
-
-final List<DummyEntity> dummyEntityList = [
-  DummyEntity(1, "dummy1"),
-  DummyEntity(2, "dummy2"),
-  DummyEntity(3, "dummy3"),
-  DummyEntity(4, "dummy4"),
-];
+import 'database/model/dummy_network.dart';
+import 'model/dummy_model.dart';
 
 void main() {
   setUpAll(() {
@@ -31,7 +23,7 @@ void main() {
 
   group('DataBoundResource test group: ', () {
     test(
-      'DataBoundResource should send the database result when the query finish',
+      'DataBoundResource should send the database result as models when the query and the map finish',
       () async {
         var database = MockDataAccessObjectImpl();
         when(
@@ -41,59 +33,57 @@ void main() {
           ),
         ).thenAnswer((realInvocation) async => dummyEntityList);
 
-        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-          localStrategy: LocalResourceStrategy.handler(
-            query: () async {
+        final dataBoundResource = DataSourceMediator(
+          localSource: LocalDatasource.build(
+            get: () async {
               final result = await database.getAll<DummyEntity>(
                 table: DummyTable.tableName,
                 toEntity: DummyEntity.fromMap,
               );
 
-              return result ?? [];
+              return result;
             },
+            mapper: (raw) => raw.map((e) => e.toModel()).toList(),
           ),
-        ).build();
-        final resource = await dataBoundResource.localCompleter;
-        assert(resource.data is List<DummyEntity>);
-      },
-    );
+        ).factory();
 
-    test(
-      'Should not be possible to return the network result without mapping',
-      () async {
-        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-          remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
-            fetch: () async {
-              return ResponseWrapper(
-                status: HttpStatus.ok,
-                data: dummyEntityList,
-              );
-            },
-            // mapServiceResult: (wrapper) => wrapper.data,
-          ),
-        ).build();
-        final resource = await dataBoundResource.networkCompleter;
-        expect(resource.status, Status.error);
+        final resource = await dataBoundResource.localCompleter;
+        assert(resource.data is List<DummyModel>);
       },
     );
 
     test(
       'DataBoundResource should send the network result when the fetch finish',
       () async {
-        final dataBoundResource = DataBoundResource<List<DummyEntity>>(
-          remoteStrategy: RemoteResourceStrategy<List<DummyEntity>>.handler(
+        final mediator = DataSourceMediator(
+          remoteSource: RemoteDataSource.build(
             fetch: () async {
               return ResponseWrapper(
                 status: HttpStatus.ok,
-                data: dummyEntityList,
+                data: dummyNetworkList,
               );
             },
-            mapServiceResult: (wrapper) => wrapper.data,
+            mapper: (raw) => raw.data?.map((e) => e.toModel()).toList(),
           ),
-        ).build();
-        final resource = await dataBoundResource.networkCompleter;
-        assert(resource.data is List<DummyEntity>);
+        ).factory();
+
+        final resource = await mediator.networkCompleter;
+        expect(resource.data?.length, 4);
       },
     );
   });
 }
+
+final List<DummyEntity> dummyEntityList = [
+  DummyEntity(1, "dummy1"),
+  DummyEntity(2, "dummy2"),
+  DummyEntity(3, "dummy3"),
+  DummyEntity(4, "dummy4"),
+];
+
+final List<DummyNetwork> dummyNetworkList = [
+  DummyNetwork(1, "dummy1"),
+  DummyNetwork(2, "dummy2"),
+  DummyNetwork(3, "dummy3"),
+  DummyNetwork(4, "dummy4"),
+];
