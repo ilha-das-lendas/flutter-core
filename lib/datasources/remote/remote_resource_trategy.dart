@@ -1,6 +1,4 @@
 import 'package:flutter_core/datasources/resource_strategy.dart';
-import 'package:flutter_core/datasources/remote/response/response_wrapper.dart';
-import 'package:flutter_core/resource.dart';
 
 class RemoteDataSource<Result, Raw>
     extends ResourceStrategy<Result, Raw> {
